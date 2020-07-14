@@ -15,13 +15,10 @@ def get_returns(s, n=1):
 
 # Hill estimator...very close to MLE
 def Hill(vec, gamma = 0.01, tail = "right"):
-    vvec = vec
-    if tail == "left":
-        vvec = [-1 * v for v in vec]
+    vvec = vec if tail == "right" else [-1 * v for v in vec]
         
-    v = list(filter(lambda x: x > gamma, vvec))
-    k = len(v) - 1
-    vs = sorted(v, reverse=True)
+    vs = sorted(filter(lambda x: x > gamma, vvec), reverse=True)
+    k = len(vs) - 1
     log_v = list(map(math.log, vs[0:-1]))
     ll_v = math.log(vs[-1])
     d = [x - ll_v for x in log_v]
@@ -31,8 +28,7 @@ def Hill(vec, gamma = 0.01, tail = "right"):
 # https://www.itl.nist.gov/div898/handbook/eda/section3/eda35e.htm
 # method from here https://arxiv.org/pdf/cond-mat/0411161.pdf
 
-def Asq(vvec, gamma):
-    vec = copy(vvec)
+def Asq(vec, gamma):
     s = sorted(filter(lambda x: x > gamma, vec))
     n_g = len(s)
     
@@ -55,15 +51,13 @@ def Asq(vvec, gamma):
     return (gamma, asq, alpha, n_g)
 
 def fit_alpha(vvec, side = "right", nmin = 10, verbose=True):
-    vec = copy(vvec)
-    if side == "left":
-        vec = [-1*x for x in vec]
+    vec = vvec if side == "right" else [-1*x for x in vvec]
     vec = sorted(filter(lambda x: x > 0, vec))
     
     a = [Asq(vec, gamma) for gamma in vec[:-1]]
     
-    # my addition to make sure there is enough data for a fit
-    aa = sorted(list(filter(lambda x: x[3] >= nmin, a)), key=lambda x: x[1])
+    # filter is my addition to make sure there is enough data for a fit
+    aa = sorted(filter(lambda x: x[3] >= nmin, a), key=lambda x: x[1])
     gamma, asq, alpha, n = aa[0]
     
     if verbose:
