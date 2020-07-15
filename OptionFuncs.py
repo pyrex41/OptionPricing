@@ -19,7 +19,7 @@ def Hill(vec, gamma = 0.01, tail = "right"):
         
     vs = sorted(filter(lambda x: x > gamma, vvec), reverse=True)
     k = len(vs) - 1
-    log_v = list(map(math.log, vs[0:-1]))
+    log_v = map(math.log, vs[0:-1])
     ll_v = math.log(vs[-1])
     d = [x - ll_v for x in log_v]
     return k / sum(d)
