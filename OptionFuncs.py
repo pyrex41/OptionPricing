@@ -21,7 +21,7 @@ def Hill(vec, gamma = 0.01, tail = "right"):
     k = len(vs) - 1
     log_v = map(math.log, vs[0:-1])
     ll_v = math.log(vs[-1])
-    d = [x - ll_v for x in log_v]
+    d = map(lambda x: x - ll_v, log_v)
     return k / sum(d)
 
 # anderson darling --> method to set threshsold gamma for tails
@@ -33,10 +33,10 @@ def Asq(vec, gamma):
     n_g = len(s)
     
     # step 1 from paper
-    alpha = n_g / sum([math.log(si / gamma) for si in s])
+    alpha = n_g / sum(map(lambda x: math.log(x / gamma), s))
     
     # cumulative distribution function
-    z_arr = [(1-((gamma / x) ** alpha)) for x in s]
+    z_arr = map(lambda x: (1-((gamma / x) ** alpha)), s)
         
     s_array = []
     for (j,si) in enumerate(s):
@@ -54,7 +54,7 @@ def fit_alpha(vvec, side = "right", nmin = 10, verbose=True):
     vec = vvec if side == "right" else [-1*x for x in vvec]
     vec = sorted(filter(lambda x: x > 0, vec))
     
-    a = [Asq(vec, gamma) for gamma in vec[:-1]]
+    a = map(lambda gamma: Asq(vec, gamma), vec[:-1])
     
     # filter is my addition to make sure there is enough data for a fit
     aa = sorted(filter(lambda x: x[3] >= nmin, a), key=lambda x: x[1])
