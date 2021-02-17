@@ -18,14 +18,14 @@ def apply(func, nodes, weights):
     s = sum(arr)
     return s
 
-def setup_problem(mu, sigma, r, T, S):
-    def mom_func(k,x, cost):
-        a = T * (mu + r - sigma**2/2) + log(S)
-        b = sigma * sqrt(T)
-        n,w = expectation_weights(a,b)
-        return exp(-r*T*(x+1)) * apply(lambda s: max(s-k,-cost)**(x+1), n, w)
-    return mom_func
+def problem_func(cost, mu, T, S, X, sigma, r):
+    a = T * (mu + r - sigma**2/2) + log(S)
+    b = sigma * sqrt(T)
+    n,w = expectation_weights(a,b)
+    def f(x):
+        return exp(-r*T*(x+1)) * apply(lambda s: max(s-X,-cost)**(x+1), n, w)
 
+    return f
 
 def kelly(moms):
     coefs = []
@@ -36,7 +36,7 @@ def kelly(moms):
     out = min(filter(isreal, sol))
     return out.real
 
-def kelly_opt(cost, mu, T, S, X, sigma, r, nmoms=4):
-    f = setup_problem(mu, sigma, r, T, S)
-    moms = list(map(lambda x: f(X, x, cost), range(0,nmoms)))
+def kelly_opt(*args, nmoms=4):
+    f = problem_func(*args)
+    moms = list(map(f, range(0,nmoms)))
     return kelly(moms)
