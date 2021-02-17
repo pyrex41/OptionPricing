@@ -6,6 +6,9 @@ from pprint import pp, pprint
 
 scheme = quadpy.e1r2.gauss_hermite(30)
 
+# approach taken from Expectations.jl library.
+
+# sets up lognormal distribution based on mean, var parameters
 def expectation_weights(mu, sigma, gh=scheme):
     nodes = []
     for p in gh.points:
@@ -13,14 +16,16 @@ def expectation_weights(mu, sigma, gh=scheme):
     weights = gh.weights / sqrt(pi)
     return (array(nodes), weights)
 
+# estimiates value of func(x) with x ~ LogNormal(a,b) via numerical method
 def apply(func, nodes, weights):
     fn = map(lambda x: func(x),  nodes)
     arr = map(lambda x: x[0]*x[1], zip(fn, weights))
     s = sum(arr)
     return s
 
-def problem_func(**kwargs):
 
+# sets up lognormal distribution and func based on parameters
+def problem_func(**kwargs):
     # default params
     params  = {
         'cost': 0.0,
@@ -46,9 +51,9 @@ def problem_func(**kwargs):
     # call payoff with s lognormally disstributed, were x is the 1st, 2nd, 3rd moment etc
     def f(x):
         return exp(-params['r']*params['T']*(x+1)) * apply(lambda s: max(s-params['X'],-params['cost'])**(x+1), n, w)
-
     return f
 
+# solve for kelly given vector of raw moments
 def kelly(moms):
     coefs = []
     for i in range(0,len(moms)):
@@ -58,8 +63,10 @@ def kelly(moms):
     out = min(filter(isreal, sol))
     return out.real
 
+# solve kelly for options
 def kelly_opt(**kwargs):
     nm = kwargs.get('nmoms', 4)
     f = problem_func(**kwargs)
+    # get a different function for each moment needed:
     moms = list(map(f, range(0,nm)))
     return kelly(moms)
