@@ -2,6 +2,7 @@ import quadpy # pip install quadpy
 from numpy import array, isreal
 from numpy.polynomial import Polynomial
 from math import sqrt, pi, exp, log
+from pprint import pp, pprint
 
 scheme = quadpy.e1r2.gauss_hermite(30)
 
@@ -18,12 +19,33 @@ def apply(func, nodes, weights):
     s = sum(arr)
     return s
 
-def problem_func(cost, mu, T, S, X, sigma, r):
-    a = T * (mu + r - sigma**2/2) + log(S)
-    b = sigma * sqrt(T)
+def problem_func(**kwargs):
+
+    # default params
+    params  = {
+        'cost': 0.0,
+        'mu': 0.0,
+        'T': 1,
+        'S': 100,
+        'X': 100,
+        'sigma': .5,
+        'r': 0.0
+    }
+
+    for (k,v) in kwargs.items():
+        params[k] = v
+
+    pp("Parameters are:")
+    pprint(params)
+
+    # define mean, var of lognormal distribution
+    a = params['T'] * (params['mu'] + params['r'] - params['sigma']**2/2) + log(params['S'])
+    b = params['sigma'] * sqrt(params['T'])
     n,w = expectation_weights(a,b)
+
+    # call payoff with s lognormally disstributed, were x is the 1st, 2nd, 3rd moment etc
     def f(x):
-        return exp(-r*T*(x+1)) * apply(lambda s: max(s-X,-cost)**(x+1), n, w)
+        return exp(-params['r']*params['T']*(x+1)) * apply(lambda s: max(s-params['X'],-params['cost'])**(x+1), n, w)
 
     return f
 
@@ -36,7 +58,8 @@ def kelly(moms):
     out = min(filter(isreal, sol))
     return out.real
 
-def kelly_opt(*args, nmoms=4):
-    f = problem_func(*args)
-    moms = list(map(f, range(0,nmoms)))
+def kelly_opt(**kwargs):
+    nm = kwargs.get('nmoms', 4)
+    f = problem_func(**kwargs)
+    moms = list(map(f, range(0,nm)))
     return kelly(moms)
