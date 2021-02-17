@@ -50,7 +50,7 @@ def problem_func(**kwargs):
 
     # call payoff with s lognormally disstributed, were x is the 1st, 2nd, 3rd moment etc
     def f(x):
-        return exp(-params['r']*params['T']*(x+1)) * apply(lambda s: max(s-params['X'],-params['cost'])**(x+1), n, w)
+        return exp(-params['r']*params['T']*(x)) * apply(lambda s: (max(s-params['X'],-params['cost'])/params['cost'])**(x), n, w)
     return f
 
 # solve for kelly given vector of raw moments
@@ -68,5 +68,9 @@ def kelly_opt(**kwargs):
     nm = kwargs.get('nmoms', 4)
     f = problem_func(**kwargs)
     # get a different function for each moment needed:
-    moms = list(map(f, range(0,nm)))
+    moms = list(map(f, range(1,nm+1)))
     return kelly(moms)
+
+def raw_moment(vec, x):
+    n = len(vec)
+    return 1/n * sum(map(lambda i: i**x, vec))
