@@ -25,7 +25,7 @@ def apply(func, nodes, weights):
 
 
 # sets up lognormal distribution and func based on parameters
-def problem_func(**kwargs):
+def problem_func(verbose=True, **kwargs):
     # default params
     params  = {
         'cost': 0.0,
@@ -40,17 +40,19 @@ def problem_func(**kwargs):
     for (k,v) in kwargs.items():
         params[k] = v
 
-    pp("Parameters are:")
-    pprint(params)
+    if verbose:
+        pp("Parameters are:")
+        pprint(params)
 
     # define mean, var of lognormal distribution
     a = params['T'] * (params['mu'] + params['r'] - params['sigma']**2/2) + log(params['S'])
     b = params['sigma'] * sqrt(params['T'])
     n,w = expectation_weights(a,b)
 
-    # call payoff with s lognormally disstributed, were x is the 1st, 2nd, 3rd moment etc
+    # call payoff with s lognormally disstributed, were x is the 1st, 2nd, 3rd moment
+    c = params['cost']
     def f(x):
-        return exp(-params['r']*params['T']*(x)) * apply(lambda s: (max(s-params['X'],-params['cost'])/params['cost'])**(x), n, w)
+        return exp(-params['r']*params['T']*(x)) * apply(lambda s: (max(s-params['X']-c,-c)/c)**(x), n, w)
     return f
 
 # solve for kelly given vector of raw moments
